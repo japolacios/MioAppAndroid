@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.util.Log;
 
 import com.mio.app.mioapp.R;
-import com.nightonke.boommenu.BoomMenuButton;
 import com.twitter.sdk.android.core.DefaultLogger;
 import com.twitter.sdk.android.core.Twitter;
 import com.twitter.sdk.android.core.TwitterAuthConfig;
@@ -14,9 +13,6 @@ import com.twitter.sdk.android.core.TwitterConfig;
 import com.twitter.sdk.android.tweetui.TweetTimelineListAdapter;
 import com.twitter.sdk.android.tweetui.UserTimeline;
 
-/**
- * Created by PI2 on 29/11/17.
- */
 
 public class TwitterActivity extends ListActivity {
 
@@ -24,7 +20,7 @@ public class TwitterActivity extends ListActivity {
     private static final String CONSUMER_KEY = "iWtpJ2GWSgII8dKH4MPqcDdiw";
     private static final String CONSUMER_SECRET = "fvmPoBIfGNfsT1x40hjZDNZheEZf7xDuIkz9j9FhvIbb5qh0fM";
     private Context mContext;
-    private BoomMenuButton bmb;
+    private TweetTimelineListAdapter adapter;
 
 
     @Override
@@ -34,26 +30,45 @@ public class TwitterActivity extends ListActivity {
         mContext = this;
 
 
+        loadTweets();
 
-        TwitterConfig config = new TwitterConfig.Builder(this)
-                .logger(new DefaultLogger(Log.DEBUG))
-                .twitterAuthConfig(new TwitterAuthConfig(CONSUMER_KEY, CONSUMER_SECRET))
-                .debug(true)
-                .build();
-        Twitter.initialize(config);
+       // setListAdapter(adapter);
+    }
+
+    public void loadTweets() {
+        new Thread(new Runnable() {
+            public void run() {
+                TwitterConfig config = new TwitterConfig.Builder(mContext)
+                        .logger(new DefaultLogger(Log.DEBUG))
+                        .twitterAuthConfig(new TwitterAuthConfig(CONSUMER_KEY, CONSUMER_SECRET))
+                        .debug(true)
+                        .build();
+                Twitter.initialize(config);
 
 
-        final UserTimeline userTimeline = new UserTimeline.Builder()
-                .screenName("metrocali")
-                .includeReplies(false)
-                .includeRetweets(false)
-                .maxItemsPerRequest(20)
-                .build();
-        final TweetTimelineListAdapter adapter = new TweetTimelineListAdapter.Builder(this)
-                .setTimeline(userTimeline)
-                .build();
-        boolean a=  adapter.isEmpty();
-        setListAdapter(adapter);
+                final UserTimeline userTimeline = new UserTimeline.Builder()
+                        .screenName("metrocali")
+                        .includeReplies(false)
+                        .includeRetweets(false)
+                        .maxItemsPerRequest(20)
+                        .build();
+                adapter = new TweetTimelineListAdapter.Builder(mContext)
+                        .setTimeline(userTimeline)
+                        .build();
+                boolean a=  adapter.isEmpty();
+
+                try{
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            setListAdapter(adapter);
+                        }
+                    });
+                }catch (Exception e){
+
+                }
+            }
+        }).start();
     }
 
 
