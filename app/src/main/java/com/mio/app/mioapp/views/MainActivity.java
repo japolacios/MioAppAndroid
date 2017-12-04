@@ -89,7 +89,7 @@ public class MainActivity extends AppCompatActivity {
 
            // if (System.currentTimeMillis() - startTime >= timer) {
         if(isServicesOK()){
-            Intent intent = new Intent(this, TwitterActivity.class);
+            Intent intent = new Intent(this, live_view.class);
             startActivity(intent);
         }
           //  }

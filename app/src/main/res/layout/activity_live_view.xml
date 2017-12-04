@@ -12,20 +12,21 @@
         android:layout_height="match_parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent" >
 
-    <com.nightonke.boommenu.BoomMenuButton
-        android:id="@+id/bmb1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|right"
-        app:bmb_buttonBottomMargin="1dp"
-        app:bmb_buttonEnum="ham"
-        app:bmb_buttonPlaceAlignmentEnum="buttonPlaceAlignment_center"
-        app:bmb_buttonPlaceEnum="buttonPlace_ham_4"
-        app:bmb_piecePlaceEnum="piecePlace_ham_4"
+        <com.nightonke.boommenu.BoomMenuButton
+            android:id="@+id/bmb1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|left"
+            app:bmb_buttonBottomMargin="1dp"
+            app:bmb_buttonEnum="ham"
+            app:bmb_buttonPlaceAlignmentEnum="buttonPlaceAlignment_center"
+            app:bmb_buttonPlaceEnum="buttonPlace_ham_4"
+            app:bmb_piecePlaceEnum="piecePlace_ham_4" />
 
-        tools:layout_editor_absoluteX="28dp"
-        tools:layout_editor_absoluteY="450dp" />
+    </fragment>
+
+
 
 </android.support.constraint.ConstraintLayout>

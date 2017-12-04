@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
@@ -26,8 +26,17 @@
             android:divider="#e1e8ed"
             android:dividerHeight="1dp"
             android:drawSelectorOnTop="false"/>
-
     </LinearLayout>
 
+    <com.nightonke.boommenu.BoomMenuButton
+        android:id="@+id/bmb1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|left"
+        app:bmb_buttonBottomMargin="1dp"
+        app:bmb_buttonEnum="ham"
+        app:bmb_buttonPlaceAlignmentEnum="buttonPlaceAlignment_center"
+        app:bmb_buttonPlaceEnum="buttonPlace_ham_4"
+        app:bmb_piecePlaceEnum="piecePlace_ham_4" />
 
-</LinearLayout>
+</RelativeLayout>
