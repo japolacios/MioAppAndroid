@@ -1,11 +1,10 @@
 package com.mio.app.mioapp.views;
 
-import android.app.ListActivity;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.support.constraint.ConstraintLayout;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
@@ -13,21 +12,8 @@ import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 
 import com.mio.app.mioapp.R;
-import com.twitter.sdk.android.core.DefaultLogger;
-import com.twitter.sdk.android.core.Twitter;
-import com.twitter.sdk.android.core.TwitterAuthConfig;
-import com.twitter.sdk.android.core.TwitterConfig;
-import com.twitter.sdk.android.tweetui.TweetTimelineListAdapter;
-import com.twitter.sdk.android.tweetui.UserTimeline;
 
-
-public class TwitterActivity extends ListActivity {
-
-    // Note: Your consumer key and secret should be obfuscated in your source code before shipping.
-    private static final String CONSUMER_KEY = "iWtpJ2GWSgII8dKH4MPqcDdiw";
-    private static final String CONSUMER_SECRET = "fvmPoBIfGNfsT1x40hjZDNZheEZf7xDuIkz9j9FhvIbb5qh0fM";
-    private Context mContext;
-    private TweetTimelineListAdapter adapter;
+public class ConfigActivity extends AppCompatActivity {
 
 
     //Menu stuff
@@ -43,11 +29,7 @@ public class TwitterActivity extends ListActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.twitter_layout);
-        mContext = this;
-
-
-        loadTweets();
+        setContentView(R.layout.activity_config);
 
         //Menu Stuff
         menu_out = AnimationUtils.loadAnimation(this, R.anim.menu_out);
@@ -55,8 +37,8 @@ public class TwitterActivity extends ListActivity {
         fade_in = AnimationUtils.loadAnimation(this, R.anim.fade_in);
         fade_out = AnimationUtils.loadAnimation(this, R.anim.fade_out);
         menu = (ConstraintLayout) findViewById(R.id.menu);
-        blackBg = (ImageView) findViewById(R.id.blackImg);
-       // setListAdapter(adapter);
+        blackBg = (ImageView) findViewById(R.id.blackImg2);
+        // setListAdapter(adapter);
         menu.startAnimation(menu_out);
         blackBg.startAnimation(fade_out);
         new CountDownTimer(600, 100) {
@@ -75,8 +57,6 @@ public class TwitterActivity extends ListActivity {
             }
         }.start();
     }
-
-
     public void toogleMenu(View view){
         Log.d("MENU", "toogleMenu: HIT");
 
@@ -127,47 +107,9 @@ public class TwitterActivity extends ListActivity {
 
     }
 
-    public void gotoConfig(View view){
-        Intent i = new Intent(this, ConfigActivity.class);
+    public void gotoNews(View view){
+        Intent i = new Intent(this, TwitterActivity.class);
         startActivity(i);
 
     }
-
-    public void loadTweets() {
-        new Thread(new Runnable() {
-            public void run() {
-                TwitterConfig config = new TwitterConfig.Builder(mContext)
-                        .logger(new DefaultLogger(Log.DEBUG))
-                        .twitterAuthConfig(new TwitterAuthConfig(CONSUMER_KEY, CONSUMER_SECRET))
-                        .debug(true)
-                        .build();
-                Twitter.initialize(config);
-
-
-                final UserTimeline userTimeline = new UserTimeline.Builder()
-                        .screenName("metrocali")
-                        .includeReplies(false)
-                        .includeRetweets(false)
-                        .maxItemsPerRequest(20)
-                        .build();
-                adapter = new TweetTimelineListAdapter.Builder(mContext)
-                        .setTimeline(userTimeline)
-                        .build();
-                boolean a=  adapter.isEmpty();
-
-                try{
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            setListAdapter(adapter);
-                        }
-                    });
-                }catch (Exception e){
-
-                }
-            }
-        }).start();
-    }
-
-
 }

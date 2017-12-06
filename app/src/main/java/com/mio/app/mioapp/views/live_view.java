@@ -77,6 +77,11 @@ public class live_view extends FragmentActivity implements OnMapReadyCallback {
     private ImageView blackBg;
     private boolean menuVisible;
 
+
+    //TOOGLES
+    private boolean seeRoutes = true;
+    private boolean seePaySpots = true;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -123,7 +128,7 @@ public class live_view extends FragmentActivity implements OnMapReadyCallback {
                     @Override
                     public void onBoomButtonClick(int index) {
                         // When the boom-button corresponding this builder is clicked.
-                        Toast.makeText(live_view.this, "Clicked " + index, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(live_view.this, "Planea tu Ruta", Toast.LENGTH_SHORT).show();
                     }
                 });
         bmb.addBuilder(builder1);
@@ -135,7 +140,14 @@ public class live_view extends FragmentActivity implements OnMapReadyCallback {
                     @Override
                     public void onBoomButtonClick(int index) {
                         // When the boom-button corresponding this builder is clicked.
-                        Toast.makeText(live_view.this, "Clicked " + index, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(live_view.this, "Rutas en Vivo", Toast.LENGTH_SHORT).show();
+                        if(seeRoutes){
+                            seeRoutes = false;
+                        } else{
+                            if(!seeRoutes){
+                                seeRoutes = true;
+                            }
+                        }
                     }
                 });
         bmb.addBuilder(builder2);
@@ -162,7 +174,14 @@ public class live_view extends FragmentActivity implements OnMapReadyCallback {
                     @Override
                     public void onBoomButtonClick(int index) {
                         // When the boom-button corresponding this builder is clicked.
-                        Toast.makeText(live_view.this, "Clicked " + index, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(live_view.this, "Puntos de Recarga", Toast.LENGTH_SHORT).show();
+                        if(seePaySpots){
+                            seePaySpots = false;
+                        } else{
+                            if(!seePaySpots){
+                                seePaySpots = true;
+                            }
+                        }
                     }
                 });
         bmb.addBuilder(builder4);
@@ -345,7 +364,7 @@ public class live_view extends FragmentActivity implements OnMapReadyCallback {
             String name = tempPoint.getNombre();
 
             //Filtra la distancia de los puntos antes de Cargarlos al mapa
-            if(myLat-lat < dist && myLat-lat>-dist && myLng-lng < dist && myLng-lng> -dist) {
+            if(myLat-lat < dist && myLat-lat>-dist && myLng-lng < dist && myLng-lng> -dist && seePaySpots) {
                 mMap.addMarker(new MarkerOptions().position(tempPosition).title(name).icon(BitmapDescriptorFactory.fromBitmap(smallMarker)));
             }
         }
@@ -363,10 +382,12 @@ public class live_view extends FragmentActivity implements OnMapReadyCallback {
             Log.d("LIVE2", "populateRoutes: Not empty");
             rutas = liveData.getRutas();
             Log.d("LIVE2", "populateRoutes: " + rutas.size());
-            for (int i = 0; i < rutas.size(); i++) {
-                LatLng tempPosition = new LatLng(rutas.get(i).getLat(), rutas.get(i).getLng() );
-                mMap.addMarker(new MarkerOptions().position(tempPosition).title(rutas.get(i).getId()).icon(BitmapDescriptorFactory.fromBitmap(smallMarker)));
-                //After adding marker
+            if(seeRoutes) {
+                for (int i = 0; i < rutas.size(); i++) {
+                    LatLng tempPosition = new LatLng(rutas.get(i).getLat(), rutas.get(i).getLng());
+                    mMap.addMarker(new MarkerOptions().position(tempPosition).title(rutas.get(i).getId()).icon(BitmapDescriptorFactory.fromBitmap(smallMarker)));
+                    //After adding marker
+                }
             }
         }
         rutas = new ArrayList<Ruta>();
@@ -446,6 +467,12 @@ public class live_view extends FragmentActivity implements OnMapReadyCallback {
 
     public void gotoNews(View view){
         Intent i = new Intent(this, TwitterActivity.class);
+        startActivity(i);
+
+    }
+
+    public void gotoConfig(View view){
+        Intent i = new Intent(this, ConfigActivity.class);
         startActivity(i);
 
     }
