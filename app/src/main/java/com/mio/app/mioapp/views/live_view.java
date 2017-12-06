@@ -437,7 +437,7 @@ public class live_view extends FragmentActivity implements OnMapReadyCallback {
                                 ArrayList<Vehiculo> d = con.getVehiculos();
 
                                 if(d.size()==0){
-                                    Toast.makeText(live_view.this, "NO HAY RUTAS CERCANAS", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(live_view.this, "No hay vehiculos cerca con la ruta deseada", Toast.LENGTH_SHORT).show();
                                 }
 
                                 for (int i = 0; i < d.size(); i++) {
