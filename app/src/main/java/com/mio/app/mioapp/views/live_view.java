@@ -5,21 +5,29 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -38,13 +46,17 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.mio.app.mioapp.R;
 import com.mio.app.mioapp.control.GetLiveData;
 import com.mio.app.mioapp.control.ReadPuntosRecarga;
+import com.mio.app.mioapp.model.ConexionHTTP;
 import com.mio.app.mioapp.model.PuntoRecarga;
 import com.mio.app.mioapp.model.Ruta;
+import com.mio.app.mioapp.model.Rutas;
+import com.mio.app.mioapp.model.Vehiculo;
 import com.nightonke.boommenu.BoomButtons.HamButton;
 import com.nightonke.boommenu.BoomButtons.OnBMClickListener;
 import com.nightonke.boommenu.BoomMenuButton;
 
 import java.util.ArrayList;
+import java.util.Map;
 
 public class live_view extends FragmentActivity implements OnMapReadyCallback {
 
@@ -54,6 +66,9 @@ public class live_view extends FragmentActivity implements OnMapReadyCallback {
     private ArrayList<Ruta> rutas;
     private double MYLat, MYLng;
     private static final String TAG = "live_view";
+
+    private static double latitud;
+    private static double longitud;
 
     private static final String FINE_LOCATION = Manifest.permission.ACCESS_FINE_LOCATION;
     private static final String COURSE_LOCATION = Manifest.permission.ACCESS_COARSE_LOCATION;
@@ -82,12 +97,65 @@ public class live_view extends FragmentActivity implements OnMapReadyCallback {
     private boolean seeRoutes = true;
     private boolean seePaySpots = true;
 
+    private Rutas rutas1;
+    private ConexionHTTP con;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        latitud = 0;
+        longitud = 0;
         mContext = this;
         setContentView(R.layout.activity_live_view);
+
+        rutas1 = new Rutas(live_view.this);
+
+        String[] str = new String[rutas1.getLista().size()];
+        int i = 0;
+        for (Map.Entry<String, String> entry : rutas1.getLista().entrySet()) {
+            str[i] = entry.getKey();
+            i++;
+        }
+
+        final AutoCompleteTextView ruta = (AutoCompleteTextView) findViewById(R.id.autoCompleteTextView);
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(live_view.this, R.layout.support_simple_spinner_dropdown_item, str);
+        ruta.setAdapter(adapter);
+
+        ImageButton imageButton = (ImageButton) findViewById(R.id.imageButton9);
+        imageButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (isNetworkAvailable()) {
+
+                    final String nombreRut = ruta.getText().toString().toUpperCase();
+                    String id = rutas1.obtenerNombreRuta(nombreRut);
+
+                    if(id!=null) {
+                        con = new ConexionHTTP("http://190.216.202.35:90/gtfs/realtime/", id, nombreRut);
+
+                        try {
+                            while (!con.isTerminoProceso()) {
+                                Toast.makeText(live_view.this, "CARGANDO", Toast.LENGTH_SHORT).show();
+                                Thread.sleep(500);
+                            }
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        onMapReady(mMap);
+                    }else{
+                        Toast.makeText(live_view.this, "INGRESE UNA RUTA CORRECTA", Toast.LENGTH_LONG).show();
+                    }
+                } else {
+                    Toast.makeText(live_view.this, "CONECTE A INTERNET", Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+
         BoomMenuButton bmb = (BoomMenuButton) findViewById(R.id.bmb1);
+        bmb.setNormalColor(getResources().getColor(R.color.blueMio));
+        bmb.setHighlightedColor(getResources().getColor(R.color.lightBlueMio));
         MYLng = 0;
         MYLat = 0;
         LocationManager locationManager;
@@ -124,6 +192,7 @@ public class live_view extends FragmentActivity implements OnMapReadyCallback {
         HamButton.Builder builder1 = new HamButton.Builder()
                 .normalImageRes(R.drawable.ic_traza_ruta)
                 .normalText("Planear ruta")
+                .normalColor(getResources().getColor(R.color.lightBlueMio))
                 .listener(new OnBMClickListener() {
                     @Override
                     public void onBoomButtonClick(int index) {
@@ -135,6 +204,7 @@ public class live_view extends FragmentActivity implements OnMapReadyCallback {
 
         HamButton.Builder builder2 = new HamButton.Builder()
                 .normalImageRes(R.drawable.ic_real_time)
+                .normalColor(getResources().getColor(R.color.greenMio))
                 .normalText("Ubicar Rutas")
                 .listener(new OnBMClickListener() {
                     @Override
@@ -152,23 +222,9 @@ public class live_view extends FragmentActivity implements OnMapReadyCallback {
                 });
         bmb.addBuilder(builder2);
 
-        HamButton.Builder builder3 = new HamButton.Builder()
-                .normalImageRes(R.drawable.ic_noticias)
-                .normalText("Noticias")
-                .listener(new OnBMClickListener() {
-                    @Override
-                    public void onBoomButtonClick(int index) {
-                        // When the boom-button corresponding this builder is clicked.
-                        Toast.makeText(live_view.this, "Clicked " + index, Toast.LENGTH_SHORT).show();
-                        Intent intent = new Intent(live_view.this, TwitterActivity.class);
-                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                        startActivity(intent);
-                    }
-                });
-        bmb.addBuilder(builder3);
-
         HamButton.Builder builder4 = new HamButton.Builder()
                 .normalImageRes(R.drawable.ic_puntos_recarga)
+                .normalColor(getResources().getColor(R.color.redMio))
                 .normalText("Puntos de recarga")
                 .listener(new OnBMClickListener() {
                     @Override
@@ -185,6 +241,12 @@ public class live_view extends FragmentActivity implements OnMapReadyCallback {
                     }
                 });
         bmb.addBuilder(builder4);
+    }
+
+    private boolean isNetworkAvailable(){
+        ConnectivityManager conexion = (ConnectivityManager) live_view.this.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo active = conexion.getActiveNetworkInfo();
+        return active!=null && active.isConnected();
     }
 
     public void initMap(){
@@ -255,6 +317,37 @@ public class live_view extends FragmentActivity implements OnMapReadyCallback {
             ActivityCompat.requestPermissions(this,
                     permissions,
                     LOCATION_PERMISSION_REQUEST_CODE);
+        }
+    }
+
+    LocationListener locListener = new LocationListener() {
+        @Override
+        public void onLocationChanged(Location location) {
+            actualizarUbicacion(location);
+        }
+
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras) {
+
+        }
+
+        @Override
+        public void onProviderEnabled(String provider) {
+
+        }
+
+        @Override
+        public void onProviderDisabled(String provider) {
+
+        }
+    };
+
+    private void actualizarUbicacion(Location locacion) {
+        if(live_view.this!=null){
+            Toast.makeText(live_view.this, "Actualiza", Toast.LENGTH_SHORT).show();
+            if (locacion != null) {
+                latitud = locacion.getLatitude();
+                longitud = locacion.getLongitude();}
         }
     }
 
@@ -334,12 +427,48 @@ public class live_view extends FragmentActivity implements OnMapReadyCallback {
                            // updateLocations();
 
 
+                            if(con != null){
+                                int height = 35;
+                                int width = 35;
+                                BitmapDrawable bitmapdraw =(BitmapDrawable)getResources().getDrawable(R.drawable.bus);
+                                Bitmap b=bitmapdraw.getBitmap();
+                                Bitmap smallMarker = Bitmap.createScaledBitmap(b, width, height, false);
+
+                                ArrayList<Vehiculo> d = con.getVehiculos();
+
+                                if(d.size()==0){
+                                    Toast.makeText(live_view.this, "NO HAY RUTAS CERCANAS", Toast.LENGTH_SHORT).show();
+                                }
+
+                                for (int i = 0; i < d.size(); i++) {
+                                    if (esCercana(latitud, longitud, d.get(i).getLatitud(), d.get(i).getLongitud())) {
+                                        Toast.makeText(live_view.this, "Vehiculo " + i, Toast.LENGTH_SHORT).show();
+                                        mMap.addMarker(new MarkerOptions()
+                                                .position(new LatLng(d.get(i).getLatitud(), d.get(i).getLongitud()))
+                                                .title(d.get(i).getNombreVehiculo()).icon(BitmapDescriptorFactory.fromBitmap(smallMarker)));}
+                                }
+                                }
+                            }
+
                         }
-                    }
                 });
 
+    }
 
+    private boolean esCercana(double y1, double x1, double y2, double x2){
+        boolean loes = false;
 
+        double radioTierra = 6371;//en kilómetros
+        double dLat = Math.toRadians(y2 - y1);
+        double dLng = Math.toRadians(x2 - x1);
+        double sindLat = Math.sin(dLat / 2);
+        double sindLng = Math.sin(dLng / 2);
+        double va1 = Math.pow(sindLat, 2) + Math.pow(sindLng, 2)
+                * Math.cos(Math.toRadians(y1)) * Math.cos(Math.toRadians(y2));
+        double va2 = 2 * Math.atan2(Math.sqrt(va1), Math.sqrt(1 - va1));
+        double distancia = radioTierra * va2;
+
+        return distancia<3;
     }
 
     public void populatePuntoRecarga(double myLat, double myLng){
@@ -371,6 +500,30 @@ public class live_view extends FragmentActivity implements OnMapReadyCallback {
     }
 
     public void populateRoutes(double myLat, double myLng){
+        int height = 35;
+        int width = 35;
+        BitmapDrawable bitmapdraw =(BitmapDrawable)getResources().getDrawable(R.drawable.bus);
+        Bitmap b=bitmapdraw.getBitmap();
+        Bitmap smallMarker = Bitmap.createScaledBitmap(b, width, height, false);
+        Log.d("LIVE2", "populateRoutes: Not empty - Rutas got on live view: " + liveData.getRutas() );
+        if(liveData.getRutas() != null && !liveData.getRutas().isEmpty()){
+            //If the array returned is not empty
+            Log.d("LIVE2", "populateRoutes: Not empty");
+            rutas = liveData.getRutas();
+            Log.d("LIVE2", "populateRoutes: " + rutas.size());
+            if(seeRoutes) {
+                for (int i = 0; i < rutas.size(); i++) {
+                    LatLng tempPosition = new LatLng(rutas.get(i).getLat(), rutas.get(i).getLng());
+                    mMap.addMarker(new MarkerOptions().position(tempPosition).title(rutas.get(i).getId()).icon(BitmapDescriptorFactory.fromBitmap(smallMarker)));
+                    //After adding marker
+                }
+            }
+        }
+        rutas = new ArrayList<Ruta>();
+
+    }
+
+    public void populateRoutes2(){
         int height = 35;
         int width = 35;
         BitmapDrawable bitmapdraw =(BitmapDrawable)getResources().getDrawable(R.drawable.bus);

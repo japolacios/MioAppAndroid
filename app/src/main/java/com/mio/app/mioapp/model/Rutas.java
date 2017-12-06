@@ -9,10 +9,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Created by Jorge Castaño on 26/11/2017.
- */
-
 public class Rutas {
 
     private Activity actividad;
