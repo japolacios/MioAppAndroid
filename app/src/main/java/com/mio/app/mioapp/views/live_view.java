@@ -67,9 +67,6 @@ public class live_view extends FragmentActivity implements OnMapReadyCallback {
     private double MYLat, MYLng;
     private static final String TAG = "live_view";
 
-    private static double latitud;
-    private static double longitud;
-
     private static final String FINE_LOCATION = Manifest.permission.ACCESS_FINE_LOCATION;
     private static final String COURSE_LOCATION = Manifest.permission.ACCESS_COARSE_LOCATION;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1234;
@@ -103,9 +100,6 @@ public class live_view extends FragmentActivity implements OnMapReadyCallback {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        latitud = 0;
-        longitud = 0;
         mContext = this;
         setContentView(R.layout.activity_live_view);
 
@@ -137,18 +131,18 @@ public class live_view extends FragmentActivity implements OnMapReadyCallback {
 
                         try {
                             while (!con.isTerminoProceso()) {
-                                Toast.makeText(live_view.this, "CARGANDO", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(live_view.this, "Cargando...", Toast.LENGTH_SHORT).show();
                                 Thread.sleep(500);
                             }
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
-                        onMapReady(mMap);
+                        populateRoutes2();
                     }else{
-                        Toast.makeText(live_view.this, "INGRESE UNA RUTA CORRECTA", Toast.LENGTH_LONG).show();
+                        Toast.makeText(live_view.this, "Ingrese una ruta correcta", Toast.LENGTH_LONG).show();
                     }
                 } else {
-                    Toast.makeText(live_view.this, "CONECTE A INTERNET", Toast.LENGTH_LONG).show();
+                    Toast.makeText(live_view.this, "Por favor, conectese a Internet", Toast.LENGTH_LONG).show();
                 }
             }
         });
@@ -214,9 +208,7 @@ public class live_view extends FragmentActivity implements OnMapReadyCallback {
                         if(seeRoutes){
                             seeRoutes = false;
                         } else{
-                            if(!seeRoutes){
                                 seeRoutes = true;
-                            }
                         }
                     }
                 });
@@ -320,37 +312,6 @@ public class live_view extends FragmentActivity implements OnMapReadyCallback {
         }
     }
 
-    LocationListener locListener = new LocationListener() {
-        @Override
-        public void onLocationChanged(Location location) {
-            actualizarUbicacion(location);
-        }
-
-        @Override
-        public void onStatusChanged(String provider, int status, Bundle extras) {
-
-        }
-
-        @Override
-        public void onProviderEnabled(String provider) {
-
-        }
-
-        @Override
-        public void onProviderDisabled(String provider) {
-
-        }
-    };
-
-    private void actualizarUbicacion(Location locacion) {
-        if(live_view.this!=null){
-            Toast.makeText(live_view.this, "Actualiza", Toast.LENGTH_SHORT).show();
-            if (locacion != null) {
-                latitud = locacion.getLatitude();
-                longitud = locacion.getLongitude();}
-        }
-    }
-
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         Log.d(TAG, "onRequestPermissionsResult: called.");
@@ -418,39 +379,18 @@ public class live_view extends FragmentActivity implements OnMapReadyCallback {
                                 liveData = new GetLiveData(location.getLatitude(), location.getLongitude());
 
                             }
-
-
-
-                                populatePuntoRecarga(location.getLatitude(), location.getLongitude());
+                            populatePuntoRecarga(location.getLatitude(), location.getLongitude());
+                            if(seeRoutes){
                                 populateRoutes(location.getLatitude(), location.getLongitude());
-
-                           // updateLocations();
-
-
-                            if(con != null){
-                                int height = 35;
-                                int width = 35;
-                                BitmapDrawable bitmapdraw =(BitmapDrawable)getResources().getDrawable(R.drawable.bus);
-                                Bitmap b=bitmapdraw.getBitmap();
-                                Bitmap smallMarker = Bitmap.createScaledBitmap(b, width, height, false);
-
-                                ArrayList<Vehiculo> d = con.getVehiculos();
-
-                                if(d.size()==0){
-                                    Toast.makeText(live_view.this, "No hay vehiculos cerca con la ruta deseada", Toast.LENGTH_SHORT).show();
-                                }
-
-                                for (int i = 0; i < d.size(); i++) {
-                                    if (esCercana(latitud, longitud, d.get(i).getLatitud(), d.get(i).getLongitud())) {
-                                        Toast.makeText(live_view.this, "Vehiculo " + i, Toast.LENGTH_SHORT).show();
-                                        mMap.addMarker(new MarkerOptions()
-                                                .position(new LatLng(d.get(i).getLatitud(), d.get(i).getLongitud()))
-                                                .title(d.get(i).getNombreVehiculo()).icon(BitmapDescriptorFactory.fromBitmap(smallMarker)));}
-                                }
-                                }
+                            }else{
+                                populateRoutes2();
                             }
 
+                            // updateLocations();
+
                         }
+
+                    }
                 });
 
     }
@@ -475,7 +415,6 @@ public class live_view extends FragmentActivity implements OnMapReadyCallback {
         double dist = 0.009;
         ArrayList<PuntoRecarga> puntosRecarga;
         ReadPuntosRecarga readPuntos = new ReadPuntosRecarga(this.getApplicationContext());
-
 
         int height = 25;
         int width = 35;
@@ -524,27 +463,26 @@ public class live_view extends FragmentActivity implements OnMapReadyCallback {
     }
 
     public void populateRoutes2(){
-        int height = 35;
-        int width = 35;
-        BitmapDrawable bitmapdraw =(BitmapDrawable)getResources().getDrawable(R.drawable.bus);
-        Bitmap b=bitmapdraw.getBitmap();
-        Bitmap smallMarker = Bitmap.createScaledBitmap(b, width, height, false);
-        Log.d("LIVE2", "populateRoutes: Not empty - Rutas got on live view: " + liveData.getRutas() );
-        if(liveData.getRutas() != null && !liveData.getRutas().isEmpty()){
-            //If the array returned is not empty
-            Log.d("LIVE2", "populateRoutes: Not empty");
-            rutas = liveData.getRutas();
-            Log.d("LIVE2", "populateRoutes: " + rutas.size());
-            if(seeRoutes) {
-                for (int i = 0; i < rutas.size(); i++) {
-                    LatLng tempPosition = new LatLng(rutas.get(i).getLat(), rutas.get(i).getLng());
-                    mMap.addMarker(new MarkerOptions().position(tempPosition).title(rutas.get(i).getId()).icon(BitmapDescriptorFactory.fromBitmap(smallMarker)));
-                    //After adding marker
-                }
+        if(con != null){
+            int height = 35;
+            int width = 35;
+            BitmapDrawable bitmapdraw =(BitmapDrawable)getResources().getDrawable(R.drawable.bus);
+            Bitmap b=bitmapdraw.getBitmap();
+            Bitmap smallMarker = Bitmap.createScaledBitmap(b, width, height, false);
+
+            ArrayList<Vehiculo> d = con.getVehiculos();
+
+            if(d.size()==0){
+                Toast.makeText(live_view.this, "No hay vehiculos cerca con la ruta deseada", Toast.LENGTH_SHORT).show();
+            }
+
+            for (int i = 0; i < d.size(); i++) {
+                if (esCercana(MYLat, MYLng, d.get(i).getLatitud(), d.get(i).getLongitud())) {
+                    mMap.addMarker(new MarkerOptions()
+                            .position(new LatLng(d.get(i).getLatitud(), d.get(i).getLongitud()))
+                            .title(d.get(i).getNombreVehiculo()).icon(BitmapDescriptorFactory.fromBitmap(smallMarker)));}
             }
         }
-        rutas = new ArrayList<Ruta>();
-
     }
 
     public void createLoop(){
@@ -553,7 +491,7 @@ public class live_view extends FragmentActivity implements OnMapReadyCallback {
 
             @Override
             public void onTick(long millisUntilFinished) {
-               // Log.d("TICK2", "onTick: ");
+                // Log.d("TICK2", "onTick: ");
             }
 
             public void onFinish() {
