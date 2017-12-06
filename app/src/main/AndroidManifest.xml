@@ -26,10 +26,10 @@
         <activity android:name=".views.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_maps_key" />
@@ -37,22 +37,19 @@
         <activity
             android:name=".views.live_view"
             android:label="@string/title_activity_live_view" />
-        <activity android:name=".views.News" />
 
         <service android:name=".control.PushService">
             <intent-filter>
-                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
-
         <service android:name=".control.TokenMngr">
             <intent-filter>
-                <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
+                <action android:name="com.google.firebase.INSTANCE_ID_EVENT" />
             </intent-filter>
         </service>
-        <activity
-            android:name=".views.TwitterActivity" />
 
+        <activity android:name=".views.TwitterActivity" />
     </application>
 
 </manifest>

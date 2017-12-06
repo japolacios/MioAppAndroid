@@ -12,10 +12,15 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.support.annotation.NonNull;
+import android.support.constraint.ConstraintLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
+import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -35,8 +40,6 @@ import com.mio.app.mioapp.control.GetLiveData;
 import com.mio.app.mioapp.control.ReadPuntosRecarga;
 import com.mio.app.mioapp.model.PuntoRecarga;
 import com.mio.app.mioapp.model.Ruta;
-import com.nightonke.boommenu.BoomButtons.ButtonPlaceAlignmentEnum;
-import com.nightonke.boommenu.BoomButtons.ButtonPlaceEnum;
 import com.nightonke.boommenu.BoomButtons.HamButton;
 import com.nightonke.boommenu.BoomButtons.OnBMClickListener;
 import com.nightonke.boommenu.BoomMenuButton;
@@ -65,6 +68,15 @@ public class live_view extends FragmentActivity implements OnMapReadyCallback {
 
     public Context mContext;
 
+    //Menu stuff
+    private Animation menu_out;
+    private Animation menu_in;
+    private Animation fade_out;
+    private Animation fade_in;
+    private ConstraintLayout menu;
+    private ImageView blackBg;
+    private boolean menuVisible;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -77,7 +89,33 @@ public class live_view extends FragmentActivity implements OnMapReadyCallback {
         rutas = new ArrayList<Ruta>();
         createLoop();
         getLocationPermission();
+        //MENU CODE
+        menu_out = AnimationUtils.loadAnimation(this, R.anim.menu_out);
+        menu_in = AnimationUtils.loadAnimation(this, R.anim.menu_in);
+        fade_in = AnimationUtils.loadAnimation(this, R.anim.fade_in);
+        fade_out = AnimationUtils.loadAnimation(this, R.anim.fade_out);
+        menu = (ConstraintLayout) findViewById(R.id.menu);
+        blackBg = (ImageView) findViewById(R.id.blackImg3);
+        // setListAdapter(adapter);
+        menu.startAnimation(menu_out);
+        blackBg.startAnimation(fade_out);
+        new CountDownTimer(600, 100) {
 
+
+            @Override
+            public void onTick(long millisUntilFinished) {
+                Log.d("TICK", "onTick: ");
+            }
+
+            public void onFinish() {
+                menu.setVisibility(View.GONE);
+                blackBg.setVisibility(View.GONE);
+                menuVisible = false;
+
+            }
+        }.start();
+
+        //------------------------- Buttons
         HamButton.Builder builder1 = new HamButton.Builder()
                 .normalImageRes(R.drawable.ic_traza_ruta)
                 .normalText("Planear ruta")
@@ -360,4 +398,55 @@ public class live_view extends FragmentActivity implements OnMapReadyCallback {
         populateRoutes(MYLat,MYLng);
     }
 
+
+    //Menu Methods
+    public void toogleMenu(View view){
+        Log.d("MENU", "toogleMenu: HIT");
+
+        if (menuVisible){
+            menu.startAnimation(menu_out);
+            blackBg.startAnimation(fade_out);
+            new CountDownTimer(600, 100) {
+
+
+                @Override
+                public void onTick(long millisUntilFinished) {
+                    Log.d("TICK", "onTick: ");
+                }
+
+                public void onFinish() {
+                    menu.setVisibility(View.GONE);
+                    blackBg.setVisibility(View.GONE);
+
+                    menuVisible = false;
+                }
+            }.start();
+        } else{
+            if (!menuVisible){
+                menu.startAnimation(menu_in);
+                menu.setVisibility(View.VISIBLE);
+                blackBg.startAnimation(fade_in);
+                blackBg.setVisibility(View.VISIBLE);
+                new CountDownTimer(600, 100) {
+
+
+                    @Override
+                    public void onTick(long millisUntilFinished) {
+                        Log.d("TICK", "onTick: ");
+                    }
+
+                    public void onFinish() {
+                        menuVisible = true;
+                    }
+                }.start();
+            }
+        }
+
+    }
+
+    public void gotoNews(View view){
+        Intent i = new Intent(this, TwitterActivity.class);
+        startActivity(i);
+
+    }
 }
